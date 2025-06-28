@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import '../pages/qr_scanner_page.dart';
+import '../../domain/entities/qr_result.dart';
 
 class ScanTab extends StatelessWidget {
-  const ScanTab({super.key});
+  final Function(QRResult)? onQRScanned;
+
+  const ScanTab({
+    super.key,
+    this.onQRScanned,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -217,16 +223,18 @@ class ScanTab extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const QRScannerPage(),
+        builder: (context) => QRScannerPage(
+          onQRScanned: onQRScanned,
+        ),
       ),
     );
   }
 
   void _showMyQR(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MyQRScreen(),
+    // Placeholder for showing user's QR code
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Show QR feature coming soon!'),
       ),
     );
   }

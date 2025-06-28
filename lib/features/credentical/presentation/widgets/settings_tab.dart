@@ -2,8 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
-class SettingsTab extends StatelessWidget {
+class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
+
+  @override
+  State<SettingsTab> createState() => _SettingsTabState();
+}
+
+class _SettingsTabState extends State<SettingsTab> {
+  bool _isCheckingBiometrics = true;
+  String _biometricStatus = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricStatus();
+  }
+
+  Future<void> _checkBiometricStatus() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    setState(() {
+      _isCheckingBiometrics = true;
+    });
+
+    try {
+      final isAvailable = await authProvider.checkBiometricAvailability();
+      setState(() {
+        _biometricStatus = isAvailable 
+          ? 'Available'
+          : 'Not available on this device';
+      });
+    } catch (e) {
+      setState(() {
+        _biometricStatus = 'Error checking biometrics';
+      });
+    } finally {
+      setState(() {
+        _isCheckingBiometrics = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,16 +71,24 @@ class SettingsTab extends StatelessWidget {
                 _buildSettingsTile(
                   icon: Icons.fingerprint,
                   title: 'Biometric Authentication',
-                  subtitle: authProvider.isBiometricEnabled
-                      ? 'Enabled'
-                      : 'Disabled',
-                  trailing: Switch(
-                    value: authProvider.isBiometricEnabled,
-                    onChanged: authProvider.isBiometricAvailable
-                        ? (value) => authProvider.enableBiometric(value)
-                        : null,
-                    activeColor: const Color(0xFF4CAF50),
-                  ),
+                  subtitle: _isCheckingBiometrics 
+                    ? 'Checking availability...'
+                    : _getBiometricSubtitle(authProvider),
+                  trailing: _isCheckingBiometrics
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Switch(
+                        value: authProvider.isBiometricEnabled,
+                        onChanged: authProvider.isBiometricAvailable
+                          ? (value) => authProvider.enableBiometric(value)
+                          : null,
+                        activeColor: const Color(0xFF4CAF50),
+                      ),
                 ),
                 _buildSettingsTile(
                   icon: Icons.lock,
@@ -61,13 +108,6 @@ class SettingsTab extends StatelessWidget {
                   title: 'Backup & Restore',
                   subtitle: 'Backup your credentials and DIDs',
                   onTap: () => _showBackupOptions(context),
-                ),
-                _buildSettingsTile(
-                  icon: Icons.delete_forever,
-                  title: 'Clear All Data',
-                  subtitle: 'Remove all credentials and settings',
-                  onTap: () => _showClearDataDialog(context, authProvider),
-                  textColor: Colors.red,
                 ),
               ]),
 
@@ -91,7 +131,7 @@ class SettingsTab extends StatelessWidget {
                 width: double.infinity,
                 margin: const EdgeInsets.symmetric(horizontal: 8),
                 child: ElevatedButton(
-                  onPressed: () => _showLogoutDialog(context, authProvider),
+                  onPressed: () => _showClearAuthDialog(context, authProvider),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red.shade50,
                     foregroundColor: Colors.red.shade700,
@@ -116,6 +156,13 @@ class SettingsTab extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _getBiometricSubtitle(AuthProvider authProvider) {
+    if (!authProvider.isBiometricAvailable) {
+      return _biometricStatus;
+    }
+    return authProvider.isBiometricEnabled ? 'Enabled' : 'Available but disabled';
   }
 
   Widget _buildSectionHeader(String title) {
@@ -188,7 +235,8 @@ class SettingsTab extends StatelessWidget {
           color: Colors.grey.shade600,
         ),
       ),
-      trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
+      trailing:
+          trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
       onTap: onTap,
     );
   }
@@ -233,37 +281,6 @@ class SettingsTab extends StatelessWidget {
     );
   }
 
-  void _showClearDataDialog(BuildContext context, AuthProvider authProvider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Clear All Data'),
-          content: const Text(
-            'This will permanently delete all data. This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await authProvider.resetApp();
-                if (context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/pin');
-                }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Clear All'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _showAboutDialog(BuildContext context) {
     showAboutDialog(
       context: context,
@@ -273,30 +290,50 @@ class SettingsTab extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
+  void _showClearAuthDialog(BuildContext context, AuthProvider authProvider) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: const Text('Clear Authentication'),
+          content: const Text(
+            'This will clear your PIN and disable biometric authentication. You will need to set up a new PIN when you restart the app.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                authProvider.logout();
-                Navigator.pushReplacementNamed(context, '/pin');
+
+                // Clear PIN and biometric
+                await authProvider.clearPinAndBiometric();
+
+                if (context.mounted) {
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Authentication cleared successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
+                  // Navigate back to welcome screen
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/welcome',
+                    (route) => false,
+                  );
+                }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Logout'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Clear'),
             ),
           ],
         );
       },
     );
   }
-} 
+}

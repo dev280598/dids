@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'features/credentical/presentation/screens/pin_screen.dart';
 import 'features/credentical/presentation/screens/home_screen.dart';
+import 'features/credentical/presentation/screens/welcome_screen.dart';
 import 'features/credentical/presentation/providers/auth_provider.dart';
 import 'features/credentical/presentation/providers/credential_provider.dart';
 import 'core/storage/storage_service.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         ),
         home: const AuthChecker(),
         routes: {
+          '/welcome': (context) => const WelcomeScreen(),
           '/pin': (context) => const PinScreen(),
           '/home': (context) => const HomeScreen(),
         },
@@ -75,7 +77,7 @@ class _AuthCheckerState extends State<AuthChecker> {
       if (hasPin) {
         Navigator.pushReplacementNamed(context, '/pin');
       } else {
-        Navigator.pushReplacementNamed(context, '/pin');
+        Navigator.pushReplacementNamed(context, '/welcome');
       }
     }
   }
