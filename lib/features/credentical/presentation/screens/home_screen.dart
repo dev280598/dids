@@ -7,6 +7,7 @@ import '../widgets/settings_tab.dart';
 import '../providers/credential_provider.dart';
 import '../../../qr_scanner/domain/entities/qr_result.dart';
 import '../../data/models/credential.dart';
+import '../../../qr_scanner/presentation/widgets/qr_scanner_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -109,62 +110,33 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     // Add credential with animation after a delay
-    Future.delayed(const Duration(milliseconds: 350), () {
-      if (!mounted) return;
-
-      final credentialProvider =
-          Provider.of<CredentialProvider>(context, listen: false);
-      credentialProvider.addCredential(credential);
-
-      // Show success snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Added ${dummyData['title']}!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          action: SnackBarAction(
-            label: 'View',
-            textColor: Colors.white,
-            onPressed: () {
-              // Ensure we're on credentials tab
-              setState(() {
-                _currentIndex = 0;
-              });
-            },
-          ),
-        ),
-      );
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        context.read<CredentialProvider>().addCredential(credential);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _tabs = [
-      CredentialsTab(key: _credentialsTabKey),
-      const DidsTab(),
-      ScanTab(onQRScanned: _handleQRScanned),
-      const SettingsTab(),
-    ];
-
     return Scaffold(
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: IndexedStack(
-          index: _currentIndex,
-          children: _tabs,
-        ),
+        child: _buildCurrentTab(),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {
+          if (_currentIndex == 2) { // If we're leaving the scan tab
+            QRScannerWidget.pauseCamera(); // Pause the camera
+          }
           setState(() {
             _currentIndex = index;
           });
+          if (index == 2) { // If we're entering the scan tab
+            QRScannerWidget.startCamera(); // Start the camera
+          }
         },
         selectedItemColor: const Color(0xFF4CAF50),
         unselectedItemColor: Colors.grey.shade600,
@@ -190,5 +162,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildCurrentTab() {
+    switch (_currentIndex) {
+      case 0:
+        return CredentialsTab(key: _credentialsTabKey);
+      case 1:
+        return const DidsTab();
+      case 2:
+        return ScanTab(onQRScanned: _handleQRScanned);
+      case 3:
+        return const SettingsTab();
+      default:
+        return const SizedBox.shrink();
+    }
   }
 }

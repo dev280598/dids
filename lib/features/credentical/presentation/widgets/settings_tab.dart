@@ -21,7 +21,7 @@ class _SettingsTabState extends State<SettingsTab> {
 
   Future<void> _checkBiometricStatus() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     setState(() {
       _isCheckingBiometrics = true;
     });
@@ -29,9 +29,8 @@ class _SettingsTabState extends State<SettingsTab> {
     try {
       final isAvailable = await authProvider.checkBiometricAvailability();
       setState(() {
-        _biometricStatus = isAvailable 
-          ? 'Available'
-          : 'Not available on this device';
+        _biometricStatus =
+            isAvailable ? 'Available' : 'Not available on this device';
       });
     } catch (e) {
       setState(() {
@@ -71,60 +70,28 @@ class _SettingsTabState extends State<SettingsTab> {
                 _buildSettingsTile(
                   icon: Icons.fingerprint,
                   title: 'Biometric Authentication',
-                  subtitle: _isCheckingBiometrics 
-                    ? 'Checking availability...'
-                    : _getBiometricSubtitle(authProvider),
+                  subtitle: _isCheckingBiometrics
+                      ? 'Checking availability...'
+                      : _getBiometricSubtitle(authProvider),
                   trailing: _isCheckingBiometrics
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Switch(
+                          value: authProvider.isBiometricEnabled,
+                          onChanged: authProvider.isBiometricAvailable
+                              ? (value) => authProvider.enableBiometric(value)
+                              : null,
+                          activeColor: const Color(0xFF4CAF50),
                         ),
-                      )
-                    : Switch(
-                        value: authProvider.isBiometricEnabled,
-                        onChanged: authProvider.isBiometricAvailable
-                          ? (value) => authProvider.enableBiometric(value)
-                          : null,
-                        activeColor: const Color(0xFF4CAF50),
-                      ),
-                ),
-                _buildSettingsTile(
-                  icon: Icons.lock,
-                  title: 'Change PIN',
-                  subtitle: 'Update your security PIN',
-                  onTap: () => _showChangePinDialog(context),
                 ),
               ]),
 
               const SizedBox(height: 24),
-
-              // Data Section
-              _buildSectionHeader('Data'),
-              _buildSettingsCard([
-                _buildSettingsTile(
-                  icon: Icons.backup,
-                  title: 'Backup & Restore',
-                  subtitle: 'Backup your credentials and DIDs',
-                  onTap: () => _showBackupOptions(context),
-                ),
-              ]),
-
-              const SizedBox(height: 24),
-
-              // About Section
-              _buildSectionHeader('About'),
-              _buildSettingsCard([
-                _buildSettingsTile(
-                  icon: Icons.info,
-                  title: 'App Version',
-                  subtitle: '1.0.0 (MVP Demo)',
-                  onTap: () => _showAboutDialog(context),
-                ),
-              ]),
-
-              const SizedBox(height: 32),
 
               // Logout Button
               Container(
@@ -162,7 +129,9 @@ class _SettingsTabState extends State<SettingsTab> {
     if (!authProvider.isBiometricAvailable) {
       return _biometricStatus;
     }
-    return authProvider.isBiometricEnabled ? 'Enabled' : 'Available but disabled';
+    return authProvider.isBiometricEnabled
+        ? 'Enabled'
+        : 'Available but disabled';
   }
 
   Widget _buildSectionHeader(String title) {

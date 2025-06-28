@@ -27,9 +27,9 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
   Future<void> _checkPermission() async {
     setState(() => _isLoading = true);
-    
+
     final status = await Permission.camera.status;
-    
+
     if (status == PermissionStatus.granted) {
       setState(() {
         _hasPermission = true;
@@ -45,9 +45,9 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
   Future<void> _requestPermission() async {
     setState(() => _isLoading = true);
-    
+
     final status = await Permission.camera.request();
-    
+
     setState(() {
       _hasPermission = status == PermissionStatus.granted;
       _isLoading = false;
@@ -57,7 +57,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
   void _onQRScanned(QRResult result) {
     // Call the parent's callback if provided
     widget.onQRScanned?.call(result);
-    
+
     // Pop back to previous screen
     Navigator.of(context).pop();
   }
@@ -122,8 +122,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
       ),
       body: QRScannerWidget(
         onQRScanned: _onQRScanned,
-        overlayText: 'Point your camera at a QR code',
       ),
     );
   }
-} 
+}
