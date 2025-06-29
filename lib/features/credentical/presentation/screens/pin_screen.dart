@@ -36,15 +36,15 @@ class _PinScreenState extends State<PinScreen> {
                   
                   const SizedBox(height: 24),
                   
-                  // Enter PIN Text
-                  const Text(
-                    'Enter your passcode',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
+                            // Enter PIN Text
+          const Text(
+            'Enter your passcode',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
                   
                   const Spacer(),
                   
@@ -88,7 +88,7 @@ class _PinScreenState extends State<PinScreen> {
         
         // App Name
         const Text(
-          'YourName',
+          'DID Wallet',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -106,13 +106,13 @@ class _PinScreenState extends State<PinScreen> {
         final isFilled = index < _pin.length;
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 12),
-          width: 16,
-          height: 16,
+          width: 20,
+          height: 20,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isFilled ? Colors.black87 : Colors.transparent,
+            color: isFilled ? const Color(0xFF4CAF50) : Colors.transparent,
             border: Border.all(
-              color: Colors.grey.shade400,
+              color: isFilled ? const Color(0xFF4CAF50) : Colors.grey.shade400,
               width: 2,
             ),
           ),

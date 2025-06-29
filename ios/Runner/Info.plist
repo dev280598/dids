@@ -45,10 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<!-- Camera permission for QR scanning -->
+	
+	<!-- Permission descriptions -->
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan QR codes for credentials and DIDs</string>
-	<!-- Face ID permission -->
 	<key>NSFaceIDUsageDescription</key>
 	<string>This app uses Face ID for secure authentication to access your digital wallet</string>
 </dict>

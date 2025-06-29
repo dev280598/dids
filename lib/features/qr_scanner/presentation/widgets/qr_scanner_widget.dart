@@ -1,62 +1,61 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../domain/entities/qr_result.dart';
 
 class QRScannerWidget extends StatefulWidget {
-  final Function(QRResult) onQRScanned;
-  final String? overlayText;
+  final Function(QRResult)? onQRScanned;
+  static final MobileScannerController _globalController = MobileScannerController(
+    detectionSpeed: DetectionSpeed.normal,
+    facing: CameraFacing.back,
+  );
 
   const QRScannerWidget({
-    Key? key,
-    required this.onQRScanned,
-    this.overlayText,
-  }) : super(key: key);
+    super.key,
+    this.onQRScanned,
+  });
+
+  static void pauseCamera() {
+    _globalController.stop();
+  }
+
+  static void startCamera() {
+    _globalController.start();
+  }
 
   @override
   State<QRScannerWidget> createState() => _QRScannerWidgetState();
 }
 
-class _QRScannerWidgetState extends State<QRScannerWidget> {
-  late MobileScannerController controller;
-  bool _isProcessing = false;
+class _QRScannerWidgetState extends State<QRScannerWidget> with WidgetsBindingObserver {
+  bool _isFlashOn = false;
 
   @override
   void initState() {
     super.initState();
-    controller = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      facing: CameraFacing.back,
-      torchEnabled: false,
-    );
+    WidgetsBinding.instance.addObserver(this);
+    QRScannerWidget.startCamera();
   }
 
-  void _handleBarcode(BarcodeCapture barcodeCapture) {
-    if (_isProcessing) return;
-    
-    final List<Barcode> barcodes = barcodeCapture.barcodes;
-    for (final Barcode barcode in barcodes) {
-      if (barcode.rawValue != null && barcode.rawValue!.isNotEmpty) {
-        _isProcessing = true;
-        
-        final qrResult = QRResult(
-          rawData: barcode.rawValue!,
-          type: _determineQRType(barcode.rawValue!),
-          scannedAt: DateTime.now(),
-          title: _generateTitle(barcode.rawValue!),
-          description: _generateDescription(barcode.rawValue!),
-        );
-        
-        widget.onQRScanned(qrResult);
-        
-        // Reset processing flag after a delay
-        Timer(const Duration(seconds: 2), () {
-          if (mounted) {
-            _isProcessing = false;
-          }
-        });
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    QRScannerWidget.pauseCamera();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        QRScannerWidget.startCamera();
         break;
-      }
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        QRScannerWidget.pauseCamera();
+        break;
+      default:
+        break;
     }
   }
 
@@ -70,7 +69,6 @@ class _QRScannerWidgetState extends State<QRScannerWidget> {
     }
     
     try {
-      // Try to parse as JSON
       if (data.contains('{') && data.contains('}')) {
         if (data.contains('credentialSubject') || data.contains('@context')) {
           return QRDataType.credential;
@@ -83,157 +81,91 @@ class _QRScannerWidgetState extends State<QRScannerWidget> {
     return QRDataType.text;
   }
 
-  String _generateTitle(String data) {
-    final type = _determineQRType(data);
-    switch (type) {
-      case QRDataType.did:
-        return 'DID';
-      case QRDataType.credential:
-        return 'Credential';
-      case QRDataType.url:
-        return 'URL';
-      case QRDataType.text:
-      case QRDataType.unknown:
-        return 'Text';
-    }
-  }
-
-  String _generateDescription(String data) {
-    if (data.length > 50) {
-      return '${data.substring(0, 50)}...';
-    }
-    return data;
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Scanner view
+        // Scanner
         MobileScanner(
-          controller: controller,
-          onDetect: _handleBarcode,
+          controller: QRScannerWidget._globalController,
+          onDetect: (capture) {
+            final List<Barcode> barcodes = capture.barcodes;
+            if (barcodes.isNotEmpty) {
+              final barcode = barcodes.first;
+              if (barcode.rawValue != null) {
+                final qrResult = QRResult(
+                  rawData: barcode.rawValue!,
+                  type: _determineQRType(barcode.rawValue!),
+                  scannedAt: DateTime.now(),
+                );
+                widget.onQRScanned?.call(qrResult);
+              }
+            }
+          },
         ),
-        
-        // Scanner overlay
-        _buildScannerOverlay(),
-        
-        // Flash toggle button
+
+        // Minimal overlay with scan area
+        CustomPaint(
+          size: Size.infinite,
+          painter: ScanAreaPainter(),
+        ),
+
+        // Flash toggle
         Positioned(
-          top: 50,
-          right: 20,
-          child: FloatingActionButton(
-            mini: true,
-            backgroundColor: Colors.black.withOpacity(0.5),
-            onPressed: () => controller.toggleTorch(),
-            child: ValueListenableBuilder(
-              valueListenable: controller.torchState,
-              builder: (context, state, child) {
-                switch (state) {
-                  case TorchState.off:
-                    return const Icon(Icons.flash_off, color: Colors.white);
-                  case TorchState.on:
-                    return const Icon(Icons.flash_on, color: Colors.yellow);
-                }
-              },
+          top: 16,
+          right: 16,
+          child: IconButton(
+            icon: Icon(
+              _isFlashOn ? Icons.flash_on : Icons.flash_off,
+              color: Colors.white,
             ),
+            onPressed: () {
+              setState(() {
+                _isFlashOn = !_isFlashOn;
+                QRScannerWidget._globalController.toggleTorch();
+              });
+            },
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildScannerOverlay() {
-    return Container(
-      color: Colors.black.withOpacity(0.5),
-      child: Column(
-        children: [
-          const Expanded(flex: 2, child: SizedBox()),
-          
-          // Scanner frame
-          Row(
-            children: [
-              const Expanded(child: SizedBox()),
-              Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Theme.of(context).primaryColor,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Stack(
-                  children: [
-                    // Corner indicators
-                    _buildCornerIndicator(Alignment.topLeft),
-                    _buildCornerIndicator(Alignment.topRight),
-                    _buildCornerIndicator(Alignment.bottomLeft),
-                    _buildCornerIndicator(Alignment.bottomRight),
-                  ],
-                ),
-              ),
-              const Expanded(child: SizedBox()),
-            ],
-          ),
-          
-          const SizedBox(height: 32),
-          
-          // Instruction text
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            margin: const EdgeInsets.symmetric(horizontal: 40),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              widget.overlayText ?? 'Point your camera at a QR code',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          
-          const Expanded(flex: 2, child: SizedBox()),
-        ],
+class ScanAreaPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black.withOpacity(0.5)
+      ..style = PaintingStyle.fill;
+
+    final scanAreaSize = size.width * 0.7;
+    final left = (size.width - scanAreaSize) / 2;
+    final top = (size.height - scanAreaSize) / 2;
+    final scanArea = Rect.fromLTWH(left, top, scanAreaSize, scanAreaSize);
+
+    // Draw semi-transparent overlay
+    canvas.drawPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
+        Path()..addRRect(RRect.fromRectAndRadius(scanArea, const Radius.circular(12))),
       ),
+      paint,
+    );
+
+    // Draw scan area border
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(scanArea, const Radius.circular(12)),
+      borderPaint,
     );
   }
 
-  Widget _buildCornerIndicator(Alignment alignment) {
-    return Align(
-      alignment: alignment,
-      child: Container(
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          border: Border(
-            top: alignment == Alignment.topLeft || alignment == Alignment.topRight
-                ? BorderSide(color: Theme.of(context).primaryColor, width: 4)
-                : BorderSide.none,
-            bottom: alignment == Alignment.bottomLeft || alignment == Alignment.bottomRight
-                ? BorderSide(color: Theme.of(context).primaryColor, width: 4)
-                : BorderSide.none,
-            left: alignment == Alignment.topLeft || alignment == Alignment.bottomLeft
-                ? BorderSide(color: Theme.of(context).primaryColor, width: 4)
-                : BorderSide.none,
-            right: alignment == Alignment.topRight || alignment == Alignment.bottomRight
-                ? BorderSide(color: Theme.of(context).primaryColor, width: 4)
-                : BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 } 

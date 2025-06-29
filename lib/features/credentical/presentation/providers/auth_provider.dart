@@ -34,6 +34,32 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Check if biometric authentication is available on the device
+  Future<bool> checkBiometricAvailability() async {
+    try {
+      print('Checking biometric status...');
+      final status = await _biometricService.getBiometricStatus();
+      print('Biometric status: $status');
+      
+      // Also check device support
+      final isDeviceSupported = await _biometricService.isDeviceSupported();
+      print('Device supports biometrics: $isDeviceSupported');
+      
+      // Get available biometric types
+      final availableBiometrics = await _biometricService.getAvailableBiometrics();
+      print('Available biometrics: $availableBiometrics');
+      
+      _isBiometricAvailable = status == BiometricStatus.available && isDeviceSupported;
+      notifyListeners();
+      return _isBiometricAvailable;
+    } catch (e) {
+      print('Error checking biometric availability: $e');
+      _isBiometricAvailable = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> authenticateWithPin(String pin) async {
     _setLoading(true);
     _clearError();
@@ -67,8 +93,25 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> setupPin(String pin) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _storageService.savePin(pin);
+      _isAuthenticated = true;
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError('Failed to setup PIN. Please try again.');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<bool> authenticateWithBiometric() async {
     if (!_isBiometricAvailable || !_isBiometricEnabled) {
+      print('Biometric auth skipped - Available: $_isBiometricAvailable, Enabled: $_isBiometricEnabled');
       return false;
     }
 
@@ -76,9 +119,11 @@ class AuthProvider with ChangeNotifier {
     _clearError();
 
     try {
+      print('Starting biometric authentication...');
       final result = await _biometricService.authenticate(
         localizedReason: 'Please authenticate to access your digital wallet',
       );
+      print('Authentication result: $result');
 
       if (result.success) {
         _isAuthenticated = true;
@@ -86,10 +131,12 @@ class AuthProvider with ChangeNotifier {
         return true;
       } else {
         _setError(result.error ?? 'Biometric authentication failed');
+        print('Authentication failed: ${result.error} (${result.errorCode})');
         _setLoading(false);
         return false;
       }
     } catch (e) {
+      print('Authentication error: $e');
       _setError('Biometric authentication error: ${e.toString()}');
       _setLoading(false);
       return false;
@@ -97,24 +144,35 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> enableBiometric(bool enable) async {
-    if (!_isBiometricAvailable) return;
+    print('Attempting to ${enable ? 'enable' : 'disable'} biometrics');
+    print('Current state - Available: $_isBiometricAvailable, Enabled: $_isBiometricEnabled');
+    
+    if (!_isBiometricAvailable) {
+      print('Cannot enable biometrics - not available');
+      return;
+    }
 
     if (enable) {
       // Test biometric authentication before enabling
+      print('Testing biometric authentication...');
       final result = await _biometricService.authenticate(
         localizedReason: 'Authenticate to enable biometric login',
       );
+      print('Test authentication result: $result');
       
       if (result.success) {
         await _storageService.setBiometricEnabled(true);
         _isBiometricEnabled = true;
+        print('Biometrics enabled successfully');
       } else {
         _setError(result.error ?? 'Failed to enable biometric authentication');
+        print('Failed to enable biometrics: ${result.error} (${result.errorCode})');
         return;
       }
     } else {
       await _storageService.setBiometricEnabled(false);
       _isBiometricEnabled = false;
+      print('Biometrics disabled successfully');
     }
     notifyListeners();
   }
@@ -130,6 +188,29 @@ class AuthProvider with ChangeNotifier {
     _isAuthenticated = false;
     _isBiometricEnabled = false;
     _clearError();
+    notifyListeners();
+  }
+
+  Future<void> clearPinAndBiometric() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      // Clear PIN
+      await _storageService.deletePin();
+      
+      // Disable biometric
+      await _storageService.setBiometricEnabled(false);
+      
+      // Reset authentication state
+      _isAuthenticated = false;
+      _isBiometricEnabled = false;
+      
+      _setLoading(false);
+    } catch (e) {
+      _setError('Failed to clear authentication data');
+      _setLoading(false);
+    }
     notifyListeners();
   }
 

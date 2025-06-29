@@ -8,11 +8,13 @@ class CredentialsTab extends StatefulWidget {
   const CredentialsTab({super.key});
 
   @override
-  State<CredentialsTab> createState() => _CredentialsTabState();
+  State<CredentialsTab> createState() => CredentialsTabState();
 }
 
-class _CredentialsTabState extends State<CredentialsTab> {
+class CredentialsTabState extends State<CredentialsTab> {
   final TextEditingController _searchController = TextEditingController();
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  List<Credential> _previousCredentials = [];
 
   @override
   void dispose() {
@@ -41,7 +43,8 @@ class _CredentialsTabState extends State<CredentialsTab> {
             onPressed: _showAddCredentialDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
+            icon:
+                const Icon(Icons.notifications_outlined, color: Colors.black87),
             onPressed: () {
               // Handle notifications
             },
@@ -50,14 +53,29 @@ class _CredentialsTabState extends State<CredentialsTab> {
       ),
       body: Consumer<CredentialProvider>(
         builder: (context, credentialProvider, child) {
+          // Check for new credentials
+          final currentCredentials = credentialProvider.credentials;
+          if (_previousCredentials.length < currentCredentials.length) {
+            // New credential was added
+            final newCredential = currentCredentials.first;
+            if (!_previousCredentials.contains(newCredential) &&
+                _previousCredentials.isNotEmpty) {
+              // Animate the new credential
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _listKey.currentState?.insertItem(0);
+              });
+            }
+          }
+          _previousCredentials = List.from(currentCredentials);
+
           return Column(
             children: [
               // Search and Filter Bar
               _buildSearchAndFilter(credentialProvider),
-              
+
               // Sort Options
               _buildSortOptions(),
-              
+
               // Credentials List
               Expanded(
                 child: _buildCredentialsList(credentialProvider),
@@ -104,9 +122,9 @@ class _CredentialsTabState extends State<CredentialsTab> {
               ),
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
+
           // Filter Button
           GestureDetector(
             onTap: () => _showFilterDialog(provider),
@@ -194,14 +212,26 @@ class _CredentialsTabState extends State<CredentialsTab> {
       );
     }
 
-    return ListView.builder(
+    return AnimatedList(
+      key: _listKey,
+      initialItemCount: credentials.length,
       padding: const EdgeInsets.all(16),
-      itemCount: credentials.length,
-      itemBuilder: (context, index) {
+      itemBuilder: (context, index, animation) {
         final credential = credentials[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: CredentialCard(credential: credential),
+        return SlideTransition(
+          position: animation.drive(
+            Tween(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).chain(CurveTween(curve: Curves.easeOut)),
+          ),
+          child: FadeTransition(
+            opacity: animation,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: CredentialCard(credential: credential),
+            ),
+          ),
         );
       },
     );
@@ -235,7 +265,8 @@ class _CredentialsTabState extends State<CredentialsTab> {
                       ? const Icon(Icons.check, color: Color(0xFF4CAF50))
                       : null,
                   onTap: () {
-                    provider.setFilter(provider.filterType == type ? null : type);
+                    provider
+                        .setFilter(provider.filterType == type ? null : type);
                     Navigator.pop(context);
                   },
                 );
@@ -282,4 +313,4 @@ class _CredentialsTabState extends State<CredentialsTab> {
       },
     );
   }
-} 
+}
