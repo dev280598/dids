@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/storage/storage_service.dart';
-import '../../../../shared/services/biometric_service.dart';
+import '../../data/services/biometric_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final StorageService _storageService = StorageService();
@@ -18,8 +20,39 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  static const String _biometricPromptShownKey = 'biometric_prompt_shown';
+
   AuthProvider() {
     _initBiometric();
+  }
+
+
+
+   // Check if biometric prompt has been shown before
+  Future<bool> hasPromptBeenShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_biometricPromptShownKey) ?? false;
+  }
+
+  // Mark that biometric prompt has been shown
+  Future<void> markPromptAsShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_biometricPromptShownKey, true);
+  }
+
+  
+  // Get biometric type name for display
+  Future<String> getBiometricDisplayName() async {
+    List<BiometricType> biometrics = await _biometricService.getAvailableBiometrics();
+    if (biometrics.contains(BiometricType.face)) {
+      return 'Face ID';
+    } else if (biometrics.contains(BiometricType.fingerprint)) {
+      return 'Touch ID';
+    } else if (biometrics.contains(BiometricType.iris)) {
+      return 'Iris';
+    } else {
+      return 'Biometric';
+    }
   }
 
   Future<void> _initBiometric() async {

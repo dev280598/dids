@@ -46,7 +46,7 @@ class _SettingsTabState extends State<SettingsTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -64,9 +64,27 @@ class _SettingsTabState extends State<SettingsTab> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Security Section
-              _buildSectionHeader('Security'),
               _buildSettingsCard([
+                _buildSettingsTile(
+                  icon: Icons.download_outlined,
+                  title: 'Backup wallet',
+                  onTap: () {},
+                
+                ),
+                _buildSettingsTile(
+                  icon: Icons.delete_outline_rounded,
+                  title: 'Remove wallet',
+                    onTap: () {},
+                ),
+                _buildSettingsTile(
+                  icon: Icons.check_circle_outline,
+                  title: 'Credentical Verifier',
+                    onTap: () {},
+                ),
+              ]),
+              SizedBox(height: 16),
+              _buildSettingsCard([
+              
                 _buildSettingsTile(
                   icon: Icons.fingerprint,
                   title: 'Biometric Authentication',
@@ -95,25 +113,26 @@ class _SettingsTabState extends State<SettingsTab> {
 
               // Logout Button
               Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                child: ElevatedButton(
+                margin: const EdgeInsets.only(bottom: 50),
+                child: TextButton.icon(
+                  icon: const Icon(Icons.logout, color: Colors.red, size: 16,),
                   onPressed: () => _showClearAuthDialog(context, authProvider),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade50,
-                    foregroundColor: Colors.red.shade700,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.red.shade200),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
+                  // style: ElevatedButton.styleFrom(
+                  //   backgroundColor: Colors.red.shade50,
+                  //   foregroundColor: Colors.red.shade700,
+                  //   padding: const EdgeInsets.symmetric(vertical: 16),
+                  //   shape: RoundedRectangleBorder(
+                  //     borderRadius: BorderRadius.circular(12),
+                  //     side: BorderSide(color: Colors.red.shade200),
+                  //   ),
+                  //   elevation: 0,
+                  // ),
+                  label: const Text(
                     'Logout',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
+                      color: Colors.red,
                     ),
                   ),
                 ),
@@ -149,20 +168,14 @@ class _SettingsTabState extends State<SettingsTab> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: children,
+    return Card.filled(
+      color: Colors.grey.shade100,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      
+        child: Column(
+          children: children,
+        ),
       ),
     );
   }
@@ -170,18 +183,19 @@ class _SettingsTabState extends State<SettingsTab> {
   Widget _buildSettingsTile({
     required IconData icon,
     required String title,
-    required String subtitle,
+     String? subtitle,
     Widget? trailing,
     VoidCallback? onTap,
     Color? textColor,
   }) {
     return ListTile(
+      
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: (textColor ?? const Color(0xFF4CAF50)).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(118),
         ),
         child: Icon(
           icon,
@@ -197,13 +211,13 @@ class _SettingsTabState extends State<SettingsTab> {
           color: textColor ?? Colors.black87,
         ),
       ),
-      subtitle: Text(
-        subtitle,
+      subtitle: subtitle != null ? Text(
+        subtitle ?? '',
         style: TextStyle(
           fontSize: 14,
           color: Colors.grey.shade600,
         ),
-      ),
+      ) : null,
       trailing:
           trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
       onTap: onTap,

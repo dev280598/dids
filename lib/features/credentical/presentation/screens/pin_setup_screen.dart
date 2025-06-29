@@ -1,4 +1,6 @@
+import 'package:dids/features/biometric/presentation/widget/enable_biometric_modal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -11,12 +13,13 @@ class PinSetupScreen extends StatefulWidget {
   State<PinSetupScreen> createState() => _PinSetupScreenState();
 }
 
-class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStateMixin {
+class _PinSetupScreenState extends State<PinSetupScreen>
+    with TickerProviderStateMixin {
   String _pin = '';
   String _confirmPin = '';
   PinSetupStep _currentStep = PinSetupStep.create;
   static const int _pinLength = 6;
-  
+
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
 
@@ -69,33 +72,34 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
-                  
+                  const SizedBox(height: 16),
+
                   // Header with step info
                   _buildStepHeader(),
-                  
-                  const SizedBox(height: 60),
-                  
+
+                  // const SizedBox(height: 60),
+
                   // PIN Input Circles
                   _buildPinDisplay(),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Instruction Text
                   _buildInstructionText(),
-                  
+
                   const Spacer(),
-                  
+
+                  const Spacer(),
+
                   // Numeric Keypad
                   _buildKeypad(),
-                  
+
                   const SizedBox(height: 32),
-                  
+
+                  const SizedBox(height: 32),
+
                   // Loading indicator
-                  if (authProvider.isLoading)
-                    const CircularProgressIndicator(),
-                  
-                  const SizedBox(height: 32),
+                  if (authProvider.isLoading) const CircularProgressIndicator(),
                 ],
               ),
             );
@@ -124,7 +128,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
           ],
         ),
         const SizedBox(height: 24),
-        
+
         // Title
         Text(
           _currentStep == PinSetupStep.create
@@ -136,19 +140,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 8),
-        
-        // Subtitle
-        Text(
-          _currentStep == PinSetupStep.create
-              ? 'Choose a 6-digit PIN to secure your wallet'
-              : 'Enter your PIN again to confirm',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey.shade600,
-          ),
-        ),
+        const SizedBox(height: 48),
       ],
     );
   }
@@ -176,7 +168,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
 
   Widget _buildPinDisplay() {
     final currentPin = _currentStep == PinSetupStep.create ? _pin : _confirmPin;
-    
+
     return AnimatedBuilder(
       animation: _shakeAnimation,
       builder: (context, child) {
@@ -192,9 +184,12 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
                 height: 20,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isFilled ? const Color(0xFF4CAF50) : Colors.transparent,
+                  color:
+                      isFilled ? const Color(0xFF4CAF50) : Colors.transparent,
                   border: Border.all(
-                    color: isFilled ? const Color(0xFF4CAF50) : Colors.grey.shade400,
+                    color: isFilled
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey.shade400,
                     width: 2,
                   ),
                 ),
@@ -208,31 +203,31 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
 
   Widget _buildInstructionText() {
     if (_currentStep == PinSetupStep.create) {
-      return Text(
-        'Enter a 6-digit PIN',
-        style: const TextStyle(
+      return const Text(
+        'Enter your passcode  ',
+        style: TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: Colors.black87,
         ),
       );
     } else {
       return Column(
         children: [
-          Text(
+          const Text(
             'Confirm your PIN',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
           ),
           if (_confirmPin.length == _pinLength && _confirmPin != _pin)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
               child: Text(
                 'PINs do not match. Please try again.',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   color: Colors.red,
                 ),
@@ -249,15 +244,15 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
         // Row 1: 1, 2, 3
         _buildKeypadRow(['1', '2', '3']),
         const SizedBox(height: 24),
-        
+
         // Row 2: 4, 5, 6
         _buildKeypadRow(['4', '5', '6']),
         const SizedBox(height: 24),
-        
+
         // Row 3: 7, 8, 9
         _buildKeypadRow(['7', '8', '9']),
         const SizedBox(height: 24),
-        
+
         // Row 4: empty, 0, delete
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -284,7 +279,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
       child: Container(
         width: 80,
         height: 80,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.transparent,
         ),
@@ -293,7 +288,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
             number,
             style: const TextStyle(
               fontSize: 28,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
           ),
@@ -329,7 +324,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
         setState(() {
           _pin += number;
         });
-        
+
         if (_pin.length == _pinLength) {
           // Move to confirm step
           Future.delayed(const Duration(milliseconds: 200), () {
@@ -344,7 +339,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
         setState(() {
           _confirmPin += number;
         });
-        
+
         if (_confirmPin.length == _pinLength) {
           _validateAndSetupPin();
         }
@@ -382,7 +377,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
         _shakeController.forward().then((_) {
           _shakeController.reverse();
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('PINs do not match. Please try again.'),
@@ -395,14 +390,30 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
           ),
         );
       }
-      
+
       // Reset confirm step
       setState(() {
         _confirmPin = '';
       });
       return;
     }
+     _setupPin();
+  }
 
+  AuthProvider get authProvider =>
+      Provider.of<AuthProvider>(context, listen: false);
+
+  
+  void _reset() {
+    // Reset to create step
+    setState(() {
+      _pin = '';
+      _confirmPin = '';
+      _currentStep = PinSetupStep.create;
+    });
+  }
+
+  void _setupPin() async {
     // PINs match, setup the PIN
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.setupPin(_pin);
@@ -421,12 +432,41 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
           ),
         );
 
-        // Navigate to home screen
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/home',
-          (route) => false,
-        );
+        final biometricAvailable =
+             authProvider.isBiometricAvailable;
+        final biometricEnabled =
+             authProvider.isBiometricEnabled;
+        final promptShown = await authProvider.hasPromptBeenShown();
+
+        final shouldShowPrompt =
+            biometricAvailable && !biometricEnabled && !promptShown;
+
+        if (shouldShowPrompt) {
+          debugPrint(
+              '🚀 PIN Setup: Will show biometric prompt, delaying navigation');
+          await _showBiometricEnablePromptIfNeeded(_pin, () {
+            if (mounted) {
+              debugPrint(
+                  '🚀 PIN Setup: Navigating to result page after biometric prompt');
+              // Navigate to home screen
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (route) => false,
+              );
+            }
+          });
+        } else {
+          debugPrint(
+              '🚀 PIN Setup: No biometric prompt needed, navigating immediately');
+          if (mounted) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
+          }
+        }
       }
     } else {
       if (mounted) {
@@ -440,14 +480,55 @@ class _PinSetupScreenState extends State<PinSetupScreen> with TickerProviderStat
             ),
           ),
         );
-        
-        // Reset to create step
-        setState(() {
-          _pin = '';
-          _confirmPin = '';
-          _currentStep = PinSetupStep.create;
-        });
+
+        _reset();
       }
     }
   }
-} 
+
+  Future<void> _showBiometricEnablePromptIfNeeded(
+      String pin, VoidCallback? onComplete) async {
+    final biometricAvailable =  authProvider.isBiometricAvailable;
+    final biometricEnabled =
+         authProvider.isBiometricEnabled;
+    final promptShown = await authProvider.hasPromptBeenShown();
+
+    if (biometricAvailable && !biometricEnabled && !promptShown) {
+      final displayName = await authProvider.getBiometricDisplayName();
+
+      if (mounted) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            debugPrint(
+                '🚀 PIN Setup: Post frame - Actually showing EnableBiometricModal dialog');
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext dialogContext) => EnableBiometricModal(
+                biometricType: displayName,
+                onDontAllow: () async {
+                  Navigator.pop(dialogContext);
+                  await authProvider.markPromptAsShown();
+                  onComplete?.call();
+                },
+                onOK: () async {
+                  Navigator.pop(dialogContext);
+                  await authProvider.setupPin(pin);
+                  await authProvider.enableBiometric(true);
+                  await authProvider.markPromptAsShown();
+                  onComplete?.call();
+                },
+              ),
+            );
+          } else {
+            onComplete?.call();
+          }
+        });
+      } else {
+        onComplete?.call();
+      }
+    } else {
+      onComplete?.call();
+    }
+  }
+}

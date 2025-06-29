@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
           textTheme: GoogleFonts.interTextTheme(),
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.white,
             elevation: 0,
             iconTheme: IconThemeData(color: Colors.black87),
             titleTextStyle: TextStyle(

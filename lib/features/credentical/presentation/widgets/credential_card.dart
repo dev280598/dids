@@ -12,18 +12,20 @@ class CredentialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return Card.filled(
+      elevation: 0.2,
+      color: Colors.grey.shade100,
+      // decoration: BoxDecoration(
+      //   color: Colors.white,
+      //   borderRadius: BorderRadius.circular(16),
+      //   boxShadow: [
+      //     BoxShadow(
+      //       color: Colors.grey.withOpacity(0.1),
+      //       blurRadius: 8,
+      //       offset: const Offset(0, 2),
+      //     ),
+      //   ],
+      // ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -32,13 +34,43 @@ class CredentialCard extends StatelessWidget {
             // Header Row
             Row(
               children: [
-                // Issuer Logo/Icon
+               
+                
+                // Title and Issuer
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        credential.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        credential.issuer,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                 // Issuer Logo/Icon
                 Container(
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _getColorForCredentialType(credential.type),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(120),
                   ),
                   child: Center(
                     child: Text(
@@ -51,46 +83,15 @@ class CredentialCard extends StatelessWidget {
                   ),
                 ),
                 
-                const SizedBox(width: 12),
-                
-                // Title and Issuer
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        credential.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        credential.issuer,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // More Options Menu
-                IconButton(
-                  icon: const Icon(Icons.more_vert, color: Colors.grey),
-                  onPressed: () => _showOptionsMenu(context),
-                ),
+                // // More Options Menu
+                // IconButton(
+                //   icon: const Icon(Icons.more_vert, color: Colors.grey),
+                //   onPressed: () => _showOptionsMenu(context),
+                // ),
               ],
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 36),
             
             // Status and Date Row
             Row(
@@ -129,14 +130,20 @@ class CredentialCard extends StatelessWidget {
                 
                 const Spacer(),
                 
-                // Issue Date
-                Text(
-                  'Issued: ${DateFormat('MMM d yyyy').format(credential.issuedDate)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+                 // Expiry Date
+                if (credential.expiryDate != null)
+                  Text(
+                    'Exp: ${DateFormat('MMM d yyyy').format(credential.expiryDate!)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: credential.isExpired 
+                          ? Colors.red.shade600 
+                          : Colors.grey.shade600,
+                      fontWeight: credential.isExpired 
+                          ? FontWeight.w600 
+                          : FontWeight.normal,
+                    ),
                   ),
-                ),
               ],
             ),
             
@@ -179,21 +186,15 @@ class CredentialCard extends StatelessWidget {
                   ),
                 
                 const Spacer(),
-                
-                // Expiry Date
-                if (credential.expiryDate != null)
-                  Text(
-                    'Exp: ${DateFormat('MMM d yyyy').format(credential.expiryDate!)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: credential.isExpired 
-                          ? Colors.red.shade600 
-                          : Colors.grey.shade600,
-                      fontWeight: credential.isExpired 
-                          ? FontWeight.w600 
-                          : FontWeight.normal,
-                    ),
+                 // Issue Date
+                Text(
+                  'Issued: ${DateFormat('MMM d yyyy').format(credential.issuedDate)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
                   ),
+                ),
+               
               ],
             ),
           ],

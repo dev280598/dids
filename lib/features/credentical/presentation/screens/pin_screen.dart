@@ -25,38 +25,39 @@ class _PinScreenState extends State<PinScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 60),
-                  
+
                   // Logo and App Name
                   _buildHeader(),
-                  
+
                   const Spacer(),
-                  
+
                   // PIN Input Circles
                   _buildPinDisplay(),
-                  
+
                   const SizedBox(height: 24),
-                  
-                            // Enter PIN Text
-          const Text(
-            'Enter your passcode',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-                  
+
+                  // Enter PIN Text
+                  const Text(
+                    'Enter your passcode',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+
                   const Spacer(),
-                  
+
                   // Numeric Keypad
                   _buildKeypad(),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Biometric Login Button
-                  if (authProvider.isBiometricAvailable && authProvider.isBiometricEnabled)
+                  if (authProvider.isBiometricAvailable &&
+                      authProvider.isBiometricEnabled)
                     _buildBiometricButton(authProvider),
-                  
+
                   const SizedBox(height: 32),
                 ],
               ),
@@ -85,7 +86,7 @@ class _PinScreenState extends State<PinScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // App Name
         const Text(
           'DID Wallet',
@@ -127,15 +128,15 @@ class _PinScreenState extends State<PinScreen> {
         // Row 1: 1, 2, 3
         _buildKeypadRow(['1', '2', '3']),
         const SizedBox(height: 24),
-        
+
         // Row 2: 4, 5, 6
         _buildKeypadRow(['4', '5', '6']),
         const SizedBox(height: 24),
-        
+
         // Row 3: 7, 8, 9
         _buildKeypadRow(['7', '8', '9']),
         const SizedBox(height: 24),
-        
+
         // Row 4: empty, 0, delete
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -223,7 +224,7 @@ class _PinScreenState extends State<PinScreen> {
       setState(() {
         _pin += number;
       });
-      
+
       if (_pin.length == _pinLength) {
         _authenticateWithPin();
       }
@@ -240,9 +241,9 @@ class _PinScreenState extends State<PinScreen> {
 
   Future<void> _authenticateWithPin() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     final isAuthenticated = await authProvider.authenticateWithPin(_pin);
-    
+
     if (isAuthenticated) {
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
@@ -252,7 +253,7 @@ class _PinScreenState extends State<PinScreen> {
       setState(() {
         _pin = '';
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -266,7 +267,7 @@ class _PinScreenState extends State<PinScreen> {
 
   Future<void> _authenticateWithBiometric(AuthProvider authProvider) async {
     final isAuthenticated = await authProvider.authenticateWithBiometric();
-    
+
     if (isAuthenticated) {
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
@@ -275,11 +276,12 @@ class _PinScreenState extends State<PinScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authProvider.errorMessage ?? 'Biometric authentication failed'),
+            content: Text(
+                authProvider.errorMessage ?? 'Biometric authentication failed'),
             backgroundColor: Colors.red,
           ),
         );
       }
     }
   }
-} 
+}

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/credential_provider.dart';
@@ -25,26 +26,20 @@ class CredentialsTabState extends State<CredentialsTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
           'Credentials',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.black87),
+            icon: const Icon(Icons.add_circle_outline, color: Colors.black),
             onPressed: _showAddCredentialDialog,
           ),
           IconButton(
             icon:
-                const Icon(Icons.notifications_outlined, color: Colors.black87),
+                const Icon(CupertinoIcons.bell, color: Colors.black),
             onPressed: () {
               // Handle notifications
             },
@@ -96,25 +91,26 @@ class CredentialsTabState extends State<CredentialsTab> {
           // Search Field
           Expanded(
             child: TextField(
+              onTapOutside: (event) => FocusScope.of(context).unfocus(),
               controller: _searchController,
               onChanged: provider.setSearchQuery,
               decoration: InputDecoration(
                 hintText: 'Search',
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(32),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(32),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(32),
                   borderSide: const BorderSide(color: Color(0xFF4CAF50)),
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: Colors.grey.shade100,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -131,9 +127,8 @@ class CredentialsTabState extends State<CredentialsTab> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.white,
+                borderRadius: BorderRadius.circular(100),
+                color: Colors.grey.shade100,
               ),
               child: const Icon(
                 Icons.tune,
